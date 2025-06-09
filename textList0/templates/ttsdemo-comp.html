@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>🗣️ TTS Voice Player with Server Selector</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 2em;
+    }
+
+    label {
+      font-weight: bold;
+    }
+
+    input[type="text"], textarea, select {
+      width: 100%;
+      padding: 0.5em;
+      font-size: 1em;
+      margin-bottom: 1em;
+      box-sizing: border-box;
+    }
+
+    textarea {
+      height: 100px;
+    }
+
+    button {
+      font-size: 1em;
+      padding: 0.6em 1.2em;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background-color: #999;
+    }
+
+    #spinner {
+      display: none;
+      margin-top: 1em;
+    }
+
+    .bars {
+      display: none;
+      margin-top: 1em;
+      height: 24px;
+    }
+
+    .bar {
+      width: 6px;
+      height: 100%;
+      margin: 0 2px;
+      background: #4CAF50;
+      display: inline-block;
+      animation: bounce 0.8s infinite ease-in-out;
+    }
+
+    .bar:nth-child(2) { animation-delay: 0.1s; }
+    .bar:nth-child(3) { animation-delay: 0.2s; }
+    .bar:nth-child(4) { animation-delay: 0.3s; }
+    .bar:nth-child(5) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 100% { transform: scaleY(0.3); }
+      50% { transform: scaleY(1); }
+    }
+
+    #selectedUrlDisplay {
+      margin: 1em 0;
+      padding: 0.5em;
+      background: #f0f0f0;
+      border-left: 4px solid #4CAF50;
+    }
+  </style>
+</head>
+<body>
+  <h2>🗣️ 텍스트 음성 변환 (TTS) 데모</h2>
+
+  <label for="preloadedUrls">📡 서버 선택 (사전 등록됨)</label>
+  <select id="preloadedUrls" onchange="syncDropdownToInput()">
+    <option value="">-- 서버를 선택하세요 --</option>
+    <option value="http://localhost:6081/synthesize">로컬 서버</option>
+    <option value="http://localhost:6081/gtts">gTTS 서버</option>
+    <option value="http://mytts.server.com/api/tts">내 서버</option>
+  </select>
+
+  <label for="serverUrl">🔌 또는 직접 입력</label>
+  <input type="text" id="serverUrl" placeholder="예: http://localhost:8000/synthesize" />
+
+  <button onclick="setBackendUrl()">✅ 백엔드 설정</button>
+
+  <div id="selectedUrlDisplay">⚠️ 백엔드 서버가 아직 설정되지 않았습니다.</div>
+
+  <label for="textInput">📝 텍스트 입력</label>
+  <textarea id="textInput" placeholder="여기에 텍스트를 입력하세요...">내일 날씨 어때요?</textarea>
+
+  <button id="playBtn" onclick="synthesizeAndPlay()">▶️ 듣기</button>
+  <div id="spinner">⏳ 처리 중...</div>
+
+  <div class="bars" id="visualizer">
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+  </div>
+
+  <audio id="player" controls style="margin-top: 1em; display: block;"></audio>
+
+  <script>
+    let backendUrl = "";
+
+    function syncDropdownToInput() {
+      const selected = document.getElementById("preloadedUrls").value;
+      if (selected) {
+        document.getElementById("serverUrl").value = selected;
+      }
+    }
+
+    function setBackendUrl() {
+      const manual = document.getElementById("serverUrl").value.trim();
+      backendUrl = manual;
+
+      const display = document.getElementById("selectedUrlDisplay");
+      if (backendUrl) {
+        display.innerHTML = `✅ 현재 백엔드 주소: <code>${backendUrl}</code>`;
+      } else {
+        display.innerHTML = `⚠️ 백엔드 서버가 아직 설정되지 않았습니다.`;
+      }
+    }
+
+    async function synthesizeAndPlay() {
+      const text = document.getElementById("textInput").value.trim();
+      const spinner = document.getElementById("spinner");
+      const visualizer = document.getElementById("visualizer");
+      const playBtn = document.getElementById("playBtn");
+
+      if (!text || !backendUrl) {
+        alert("텍스트와 백엔드 주소를 모두 설정해주세요.");
+        return;
+      }
+
+      playBtn.disabled = true;
+      spinner.style.display = "block";
+      visualizer.style.display = "none";
+
+      try {
+        const formData = new URLSearchParams();
+        formData.append("text", text);
+
+        const response = await fetch(backendUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: formData
+        });
+
+        if (!response.ok) throw new Error("응답 실패: " + response.statusText);
+
+        const blob = await response.blob();
+        const audioURL = URL.createObjectURL(blob);
+        const player = document.getElementById("player");
+
+        player.src = audioURL;
+        player.play();
+
+        visualizer.style.display = "block";
+        player.onended = () => { visualizer.style.display = "none"; };
+      } catch (err) {
+        alert("오류 발생: " + err.message);
+      } finally {
+        spinner.style.display = "none";
+        playBtn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

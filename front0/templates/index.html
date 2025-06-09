@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Text to Audio</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>Text-to-Speech Demo</h1>
+    <ul id="text-list">
+        {% for text in texts %}
+        <li>
+            <span>{{ text }}</span>
+            <button onclick="playAudio(`{{ text }}`)">🔊</button>
+            <div class="visualizer" id="viz-{{ loop.index }}"></div>
+        </li>
+        {% endfor %}
+    </ul>
+    <script src="/static/player.js"></script>
+</body>
+</html>

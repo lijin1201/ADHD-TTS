@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Korean TTS Player</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 2em;
+        }
+        textarea {
+            width: 300px;
+            height: 100px;
+            font-size: 1.1em;
+        }
+        button {
+            font-size: 1em;
+            padding: 0.5em 1em;
+            margin-left: 1em;
+        }
+    </style>
+</head>
+<body>
+    <h2>🗣️ 텍스트를 음성으로</h2>
+    <textarea id="textInput" placeholder="여기에 텍스트를 입력하세요...">김진수 쌤미 훌륭합니다.</textarea>
+    <button onclick="synthesizeAndPlay()">▶️ 듣기</button>
+    <audio id="player" controls style="margin-top: 1em; display: block;"></audio>
+
+    <script>
+        async function synthesizeAndPlay() {
+            const text = document.getElementById("textInput").value;
+            const formData = new URLSearchParams();
+            formData.append("text", text);
+
+            const response = await fetch("http://localhost:6081/synthesize", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: formData
+            });
+
+            if (!response.ok) {
+                alert("음성 변환 실패: " + response.statusText);
+                return;
+            }
+
+            const blob = await response.blob();
+            const audioURL = URL.createObjectURL(blob);
+            const player = document.getElementById("player");
+            player.src = audioURL;
+            player.play();
+        }
+    </script>
+</body>
+</html>

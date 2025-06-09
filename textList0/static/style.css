@@ -1,0 +1,37 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 2em;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1em;
+}
+
+li span {
+    flex: 1;
+}
+
+.visualizer {
+    width: 30px;
+    height: 20px;
+    margin-left: 10px;
+    background: lightgray;
+    transition: 0.2s ease;
+}
+
+.visualizer.playing {
+    background: linear-gradient(to top, #4caf50 0%, #4caf50 100%);
+    animation: bounce 0.5s infinite alternate;
+}
+
+@keyframes bounce {
+    0%   { transform: scaleY(0.3); }
+    100% { transform: scaleY(1); }
+}
