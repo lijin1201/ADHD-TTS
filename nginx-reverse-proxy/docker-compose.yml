@@ -1,0 +1,9 @@
+version: '3'
+services:
+  nginx-proxy:
+    build: .
+    ports:
+      - "11081:11081"
+      - "11181:11181"
+    network_mode: "host"
+    container_name: nginx-proxy0
